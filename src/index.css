@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: 'Heebo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --color-quicket: #6fc800;
+  --color-quicket-dark: #61af00;
+  --color-quicket-light: #83e00e;
+}
+
+body {
+  font-family: 'Heebo', sans-serif;
+}
+
 @layer utilities {
   @keyframes blob {
     0% { transform: translate(0px, 0px) scale(1); }
@@ -20,3 +31,4 @@
     animation-delay: 4s;
   }
 }
+

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { motion } from 'motion/react';
 import {
   Calendar,
   Clock,
@@ -16,8 +17,21 @@ import {
   Sparkles,
   Volume2,
   VolumeX,
-  X
+  X,
+  Image as ImageIcon
 } from 'lucide-react';
+import { QuicketLogo, QuicketQIcon, QuicketPageTag } from './components/QuicketBrand';
+import { PosterArtwork } from './components/PosterArtwork';
+import { BandStageIllustration } from './components/BandStageIllustration';
+import { 
+  PaperTextureBackground, 
+  FolkRose, 
+  BlueAnemone, 
+  OrangePoppy, 
+  MarigoldBlossom, 
+  Bellflowers, 
+  StarFlower 
+} from './components/BotanicalTheme';
 
 interface TimeLeft {
   days: number;
@@ -32,12 +46,12 @@ export default function App() {
   const quicketLink = "https://www.quicket.co.za/events/393344-caf-barcelona-presents-leband/?utm_source=EventPage&utm_medium=Sharebox&utm_campaign=&ref=event-page-share";
   const mapsLink = "https://www.google.com/maps/search/?api=1&query=Caf%C3%A9+Barcelona+Garsfontein+Pretoria";
 
-  const eventTitle = "Café Barcelona Presents L.E. BAND - Live in Concert";
+  const eventTitle = "Café Barcelona Presents L.E.BAND - UNPLUGGED (Louis Esterhuizen Band)";
   const eventDate = "25 September 2026";
   const eventTime = "19:00 - 21:00 (SAST)";
   const eventVenue = "Café Barcelona, Pretoria";
 
-  const fullShareText = `🎸 ${eventTitle}\n📅 Date: ${eventDate}\n⏰ Time: ${eventTime}\n📍 Venue: ${eventVenue}\n🎟️ Get Tickets: ${quicketLink}`;
+  const fullShareText = `🎸 ${eventTitle}\n📅 Date: ${eventDate}\n⏰ Time: ${eventTime}\n📍 Venue: ${eventVenue}\n🎟️ Get Tickets on Quicket: ${quicketLink}`;
 
   const calculateTimeLeft = useCallback((): TimeLeft => {
     const difference = targetDate - Date.now();
@@ -54,62 +68,111 @@ export default function App() {
   }, [targetDate]);
 
   const [timeLeft, setTimeLeft] = useState<TimeLeft>(calculateTimeLeft());
+  const [showShareModal, setShowShareModal] = useState<boolean>(false);
+  const [showPosterModal, setShowPosterModal] = useState<boolean>(false);
   const [showCopiedToast, setShowCopiedToast] = useState<string | null>(null);
   const [isPlayingVibe, setIsPlayingVibe] = useState<boolean>(false);
-  const [showShareModal, setShowShareModal] = useState<boolean>(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft(calculateTimeLeft());
     }, 1000);
+
     return () => clearInterval(timer);
   }, [calculateTimeLeft]);
 
-  const copyToClipboard = async (text: string, successMessage: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setShowCopiedToast(successMessage);
-      setTimeout(() => setShowCopiedToast(null), 3000);
-    } catch {
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-      textArea.style.position = 'fixed';
-      textArea.style.opacity = '0';
-      document.body.appendChild(textArea);
-      textArea.select();
+  // Gentle acoustic ambiance synth audio generator
+  useEffect(() => {
+    let audioCtx: AudioContext | null = null;
+    let isCancelled = false;
+    let loopTimeout: number | null = null;
+
+    if (isPlayingVibe) {
       try {
-        document.execCommand('copy');
-        setShowCopiedToast(successMessage);
-        setTimeout(() => setShowCopiedToast(null), 3000);
-      } catch (e) {
-        console.error("Copy failed", e);
+        const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        audioCtx = new AudioContextClass();
+
+        const chords = [
+          [220, 277.18, 329.63, 440], // A major warm acoustic
+          [164.81, 207.65, 246.94, 329.63], // E major
+          [146.83, 220, 293.66, 369.99], // D major
+          [174.61, 220, 261.63, 349.23]  // F#m / Dm warmth
+        ];
+
+        let chordIndex = 0;
+
+        const playWarmChord = () => {
+          if (!audioCtx || audioCtx.state === 'closed' || isCancelled) return;
+
+          const currentNotes = chords[chordIndex];
+          chordIndex = (chordIndex + 1) % chords.length;
+
+          currentNotes.forEach((freq, i) => {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = i % 2 === 0 ? 'triangle' : 'sine';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+            const startTime = audioCtx.currentTime + i * 0.12;
+            const noteDuration = 3.8;
+
+            gain.gain.setValueAtTime(0.0001, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.04, startTime + 0.5);
+            gain.gain.exponentialRampToValueAtTime(0.0001, startTime + noteDuration);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(startTime);
+            osc.stop(startTime + noteDuration);
+          });
+
+          loopTimeout = window.setTimeout(playWarmChord, 3500);
+        };
+
+        playWarmChord();
+      } catch {
+        // Fallback gracefully if Web Audio is restricted
       }
-      document.body.removeChild(textArea);
     }
+
+    return () => {
+      isCancelled = true;
+      if (loopTimeout) clearTimeout(loopTimeout);
+      if (audioCtx && audioCtx.state !== 'closed') {
+        audioCtx.close().catch(() => {});
+      }
+    };
+  }, [isPlayingVibe]);
+
+  const copyToClipboard = (text: string, toastMessage = "Copied to clipboard!") => {
+    navigator.clipboard.writeText(text).then(() => {
+      setShowCopiedToast(toastMessage);
+      setTimeout(() => setShowCopiedToast(null), 3000);
+    }).catch(() => {
+      setShowCopiedToast("Copied text!");
+      setTimeout(() => setShowCopiedToast(null), 3000);
+    });
   };
 
   const handleShareFacebook = () => {
-    const quote = `${eventTitle} | ${eventDate} at ${eventTime} @ ${eventVenue}. Get tickets:`;
-    const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(quicketLink)}&quote=${encodeURIComponent(quote)}`;
-    window.open(fbShareUrl, '_blank', 'noopener,noreferrer,width=600,height=500');
+    const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(quicketLink)}&quote=${encodeURIComponent(fullShareText)}`;
+    window.open(fbShareUrl, '_blank', 'width=600,height=500');
   };
 
   const handleShareTwitter = () => {
-    const tweetText = `🎸 ${eventTitle}\n📅 Date: ${eventDate}\n⏰ Time: ${eventTime}\n📍 Venue: ${eventVenue}\n🎟️ Tickets:`;
-    const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(quicketLink)}&hashtags=LEBand,CafeBarcelona,LiveMusic`;
-    window.open(twitterShareUrl, '_blank', 'noopener,noreferrer,width=600,height=500');
+    const tweetText = `🎸 ${eventTitle}\n📅 25 Sept 2026, 19:00\n📍 Café Barcelona, Pretoria\n\nBook your tickets now on @QuicketSA:`;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(quicketLink)}`;
+    window.open(twitterUrl, '_blank', 'width=600,height=500');
   };
 
-  const handleShareInstagram = async () => {
-    // Instagram doesn't support pre-filling post text via web URL parameter,
-    // so we copy the complete pre-formatted caption with title, date, time & link, then open Instagram.
-    await copyToClipboard(
-      fullShareText,
-      "Instagram caption copied to clipboard! Paste it in your post or story."
-    );
+  const handleShareInstagram = () => {
+    copyToClipboard(fullShareText, "Formatted event caption copied for Instagram! Paste in your post/story.");
     setTimeout(() => {
-      window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
-    }, 600);
+      window.open('https://www.instagram.com', '_blank');
+    }, 900);
   };
 
   const handleGeneralShare = async () => {
@@ -117,208 +180,340 @@ export default function App() {
       try {
         await navigator.share({
           title: eventTitle,
-          text: `Join us for ${eventTitle} on ${eventDate} at ${eventTime}!`,
+          text: fullShareText,
           url: quicketLink,
         });
-        return;
       } catch {
-        // user dismissed or not supported
+        // User cancelled or share not supported
       }
+    } else {
+      copyToClipboard(fullShareText, "Event details & Quicket link copied to clipboard!");
     }
-    copyToClipboard(quicketLink, "Ticket link copied to clipboard!");
   };
 
   const handleAddToGoogleCalendar = () => {
     const title = encodeURIComponent(eventTitle);
-    const details = encodeURIComponent(`Café Barcelona presents L.E. BAND live in concert.\n\nDate: ${eventDate}\nTime: ${eventTime}\nVenue: ${eventVenue}\n\nBook tickets on Quicket: ${quicketLink}`);
+    const details = encodeURIComponent(`Café Barcelona presents L.E.BAND - UNPLUGGED (Louis Esterhuizen Band) live in concert.\n\nDate: ${eventDate}\nTime: ${eventTime}\nVenue: ${eventVenue}\n\nBook tickets on Quicket: ${quicketLink}`);
     const location = encodeURIComponent("Café Barcelona, Pretoria, South Africa");
     // 25 Sep 2026 19:00 SAST (17:00 UTC) to 21:00 SAST (19:00 UTC)
     const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=20260925T170000Z/20260925T190000Z&details=${details}&location=${location}`;
-    window.open(gCalUrl, '_blank', 'noopener,noreferrer');
+    window.open(gCalUrl, '_blank');
   };
 
   return (
-    <div id="event-page-container" className="min-h-screen bg-[#f8f5ef] flex items-center justify-center font-sans overflow-x-hidden relative p-3 sm:p-6 select-none">
-      {/* Decorative Blur Backdrops */}
-      <div className="absolute top-4 left-4 w-52 h-52 bg-orange-200 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob pointer-events-none"></div>
-      <div className="absolute top-8 right-8 w-52 h-52 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000 pointer-events-none"></div>
-      <div className="absolute -bottom-10 left-1/3 w-56 h-56 bg-red-200 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-4000 pointer-events-none"></div>
+    <div className="min-h-screen bg-[#ede8dc] text-[#162b48] flex flex-col items-center justify-center p-3 sm:p-6 font-['Heebo'] relative overflow-x-hidden selection:bg-[#5EB700]/20 selection:text-[#162b48]">
+      
+      {/* Background Decorative Paper Texture & Atmospheric Band Concert Artwork */}
+      <div className="fixed inset-0 pointer-events-none select-none z-0 overflow-hidden flex items-center justify-center">
+        <PaperTextureBackground />
+        <div className="absolute inset-0 opacity-75 sm:opacity-85 flex items-center justify-center">
+          <BandStageIllustration className="w-full h-full object-cover min-w-[700px] max-w-[1400px]" opacity={0.95} showSpotlights={true} />
+        </div>
+        <div className="absolute inset-0 bg-[#ede8dc]/25 backdrop-blur-[0.5px]"></div>
+      </div>
 
-      {/* Floating Toast Notification */}
+      {/* Floating Botanical Corner Accents on App Canvas */}
+      <div className="fixed -top-6 -left-6 pointer-events-none opacity-40 select-none z-0 hidden md:block">
+        <FolkRose size={140} />
+      </div>
+      <div className="fixed -top-6 -right-6 pointer-events-none opacity-40 select-none z-0 hidden md:block">
+        <FolkRose size={140} className="transform rotate-90" />
+      </div>
+      <div className="fixed -bottom-6 -left-6 pointer-events-none opacity-40 select-none z-0 hidden md:block">
+        <BlueAnemone size={130} />
+      </div>
+      <div className="fixed -bottom-6 -right-6 pointer-events-none opacity-40 select-none z-0 hidden md:block">
+        <FolkRose size={140} className="transform -rotate-90" />
+      </div>
+
+      {/* Toast Notification */}
       {showCopiedToast && (
         <div 
           id="toast-notification"
-          className="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 bg-[#1e3450] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs sm:text-sm font-medium border border-white/20 animate-bounce max-w-[90vw]"
+          className="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 bg-[#162b48] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs sm:text-sm font-medium border border-white/20 animate-bounce max-w-[90vw]"
         >
-          <div className="w-5 h-5 rounded-full bg-[#7bc143] flex items-center justify-center flex-shrink-0">
+          <div className="w-5 h-5 rounded-full bg-[#5EB700] flex items-center justify-center flex-shrink-0">
             <Check size={13} className="text-white stroke-[3]" />
           </div>
           <span>{showCopiedToast}</span>
         </div>
       )}
 
-      <main className="max-w-md w-full bg-[#f8f5ef] shadow-2xl rounded-3xl overflow-hidden relative z-10 border border-[#e6dfd1] transition-all duration-300">
+      {/* Main Poster Applet Container */}
+      <main className="max-w-md w-full bg-[#f4f0e6] shadow-2xl rounded-3xl overflow-hidden relative z-10 border border-[#d6cfbe] transition-all duration-300">
         
-        {/* Header / Hero Section */}
-        <header className="relative h-72 sm:h-80 w-full flex items-center justify-center overflow-hidden bg-[#1e3450]">
-          {/* Live concert atmosphere background */}
-          <div 
-            className="absolute inset-0 bg-cover bg-center opacity-35 mix-blend-overlay scale-105 transform hover:scale-110 transition-transform duration-1000"
-            style={{ 
-              backgroundImage: `url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80')` 
-            }}
-          ></div>
-          
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1e3450] via-[#1e3450]/80 to-transparent opacity-95"></div>
+        {/* Top Official Quicket Header Bar */}
+        <div className="bg-[#162b48] px-4 py-2.5 flex items-center justify-between border-b border-white/10 text-white text-xs">
+          <div className="flex items-center gap-2.5">
+            <QuicketQIcon size={24} variant="profile" />
+            <div>
+              <div className="font-black text-white text-[13px] tracking-tight leading-tight uppercase">
+                Quicket
+              </div>
+              <div className="text-gray-300 font-normal text-[10px] tracking-wider uppercase">
+                Official Event
+              </div>
+            </div>
+          </div>
+          <QuicketPageTag href={quicketLink} variant="white" />
+        </div>
 
-          {/* Sound vibe preview toggle in header corner */}
-          <button
-            id="audio-vibe-toggle-btn"
-            onClick={() => setIsPlayingVibe(!isPlayingVibe)}
-            title={isPlayingVibe ? "Mute venue ambiance" : "Play venue acoustic vibe"}
-            aria-label="Toggle concert sound ambience"
-            className="absolute top-4 right-4 z-20 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-[#e5a97c] backdrop-blur-md transition-colors"
-          >
-            {isPlayingVibe ? <Volume2 size={18} className="animate-pulse" /> : <VolumeX size={18} className="opacity-75" />}
-          </button>
+        {/* ========================================================================= */}
+        {/* HERO SECTION: DIRECT REPLICA OF CONCERT POSTER ARTWORK & ENGRAVED VIBE */}
+        {/* ========================================================================= */}
+        <header className="relative w-full bg-[#f4f0e6] overflow-hidden pt-7 pb-8 px-6 text-center border-b border-[#d6cfbe]">
           
-          <div className="relative z-10 text-center px-6 mt-6">
-            <span className="inline-block text-[#f8f5ef]/90 text-xs sm:text-sm tracking-widest uppercase font-semibold mb-2 bg-white/10 px-3.5 py-1 rounded-full backdrop-blur-xs border border-white/15">
-              Café Barcelona Presents
-            </span>
-            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-2 tracking-tight drop-shadow-md" style={{ fontFamily: 'Georgia, serif' }}>
-              L.E. BAND
+          {/* Subtle Paper Grain */}
+          <PaperTextureBackground />
+
+          {/* Central 4-Piece Band Unplugged Stage Illustration Backdrop */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+            <BandStageIllustration className="w-full h-full object-cover scale-110 translate-y-1" opacity={0.45} showSpotlights={true} />
+          </div>
+
+          {/* Botanical Floral Frame Corner Accents (Matching Poster Motif) */}
+          <div className="absolute -top-3 -left-3 pointer-events-none select-none z-10">
+            <BlueAnemone size={72} className="transform -rotate-12" />
+          </div>
+          <div className="absolute top-11 -left-2 pointer-events-none select-none z-10">
+            <MarigoldBlossom size={42} />
+          </div>
+          <div className="absolute -top-3 -right-3 pointer-events-none select-none z-10">
+            <FolkRose size={85} className="transform rotate-12" />
+          </div>
+          <div className="absolute top-12 right-0 pointer-events-none select-none z-10">
+            <OrangePoppy size={46} />
+          </div>
+
+          {/* Quick Floating Actions over Botanical Header */}
+          <div className="absolute top-3 right-3 z-20 flex items-center gap-2">
+            {/* View Full Poster Modal Toggle */}
+            <button
+              id="view-poster-artwork-btn"
+              onClick={() => setShowPosterModal(true)}
+              title="View full commemorative concert poster"
+              className="p-1.5 sm:p-2 rounded-full bg-[#162b48]/85 hover:bg-[#162b48] text-white backdrop-blur-md transition-colors flex items-center gap-1.5 text-[11px] sm:text-xs font-bold px-2.5 sm:px-3 shadow-md border border-white/20"
+            >
+              <ImageIcon size={13} className="text-[#5EB700]" />
+              <span>Poster</span>
+            </button>
+
+            {/* Audio Ambiance preview toggle */}
+            <button
+              id="audio-vibe-toggle-btn"
+              onClick={() => setIsPlayingVibe(!isPlayingVibe)}
+              title={isPlayingVibe ? "Mute venue ambiance" : "Play venue acoustic vibe"}
+              aria-label="Toggle concert sound ambience"
+              className="p-1.5 sm:p-2 rounded-full bg-[#162b48]/85 hover:bg-[#162b48] text-[#5EB700] backdrop-blur-md transition-colors shadow-md border border-white/20"
+            >
+              {isPlayingVibe ? <Volume2 size={15} className="animate-pulse" /> : <VolumeX size={15} className="opacity-80" />}
+            </button>
+          </div>
+
+          {/* Authentic Concert Poster Typography */}
+          <div className="relative z-10 mt-1">
+            <div className="font-['Playfair_Display'] text-xl sm:text-2xl font-extrabold text-[#162b48] tracking-tight leading-tight">
+              Café Barcelona
+            </div>
+            <div className="font-['Playfair_Display'] text-xl sm:text-2xl font-extrabold text-[#162b48] tracking-tight leading-none mt-0.5 mb-3">
+              Presents
+            </div>
+
+            <h1 className="font-['Playfair_Display'] text-3xl sm:text-4xl font-black text-[#162b48] tracking-tight leading-none uppercase drop-shadow-xs">
+              L.E.BAND - UNPLUGGED
             </h1>
-            <div className="flex items-center justify-center space-x-2 text-[#e5a97c]">
-              <Music size={16} className="animate-pulse" />
-              <span className="text-sm font-medium tracking-wide">Live in Concert</span>
-              <Music size={16} className="animate-pulse" />
+
+            <p className="font-['Playfair_Display'] italic text-sm sm:text-base font-bold text-[#2d4768] mt-1 mb-2 tracking-wide">
+              Louis Esterhuizen Band
+            </p>
+
+            {/* Delicate Vintage Engraved Divider */}
+            <div className="flex items-center justify-center gap-2.5 my-2.5">
+              <span className="h-[1.5px] w-10 sm:w-14 bg-[#5a7088]/50"></span>
+              <div className="w-2 h-2 rotate-45 border border-[#5a7088]/80 bg-[#f4f0e6]"></div>
+              <span className="h-[1.5px] w-10 sm:w-14 bg-[#5a7088]/50"></span>
+            </div>
+
+            {/* Poster Date & Time Representation */}
+            <div className="space-y-0.5">
+              <div className="font-['Playfair_Display'] text-lg sm:text-xl font-extrabold text-[#162b48] tracking-normal">
+                25 September
+              </div>
+              <div className="font-['Playfair_Display'] text-base sm:text-lg font-bold text-[#162b48] tracking-normal">
+                19:00-21:00
+              </div>
             </div>
           </div>
         </header>
 
-        {/* Content Section */}
-        <div className="px-6 py-7 relative bg-[#f8f5ef] -mt-6 rounded-t-3xl border-t border-[#e6dfd1]">
+        {/* Content Section with Vintage Cream Styling */}
+        <div className="px-5 sm:px-6 py-6 relative bg-[#f4f0e6]">
           
-          {/* Floating Countdown Box */}
+          {/* Floating Countdown Box with Antique Ticket Framing */}
           <div 
             id="countdown-container" 
-            className="bg-white rounded-2xl shadow-xl p-4 -mt-16 mb-6 relative z-20 border border-[#e6dfd1] transform transition-transform hover:scale-[1.02] duration-300"
+            className="bg-white/90 backdrop-blur-xs rounded-2xl shadow-xl p-4 -mt-10 mb-6 relative z-20 border-2 border-[#d6cfbe] transform transition-transform hover:scale-[1.01] duration-300"
           >
-            <div className="flex items-center justify-center gap-1.5 mb-3">
-              <span className="w-2 h-2 rounded-full bg-[#d9534f] animate-ping inline-block"></span>
-              <p className="text-center text-xs font-bold text-[#1e3450] uppercase tracking-wider">
-                Event Starts In
+            <div className="flex items-center justify-center gap-1.5 mb-2.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#c02b20] animate-ping inline-block"></span>
+              <p className="text-center text-xs font-black text-[#162b48] uppercase tracking-wider">
+                Concert Starts In
               </p>
             </div>
             
-            <div className="grid grid-cols-4 gap-2 text-center divide-x divide-[#e6dfd1]">
+            <div className="grid grid-cols-4 gap-2 text-center divide-x divide-[#e6dfcc]">
               <div className="px-1">
-                <span className="block text-2xl sm:text-3xl font-extrabold text-[#d9534f] tracking-tight">
+                <span className="block text-2xl sm:text-3xl font-black text-[#c02b20] tracking-tight">
                   {timeLeft.days}
                 </span>
-                <span className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">Days</span>
+                <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Days</span>
               </div>
               <div className="px-1">
-                <span className="block text-2xl sm:text-3xl font-extrabold text-[#1e3450] tracking-tight">
+                <span className="block text-2xl sm:text-3xl font-black text-[#162b48] tracking-tight">
                   {String(timeLeft.hours).padStart(2, '0')}
                 </span>
-                <span className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">Hours</span>
+                <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Hours</span>
               </div>
               <div className="px-1">
-                <span className="block text-2xl sm:text-3xl font-extrabold text-[#1e3450] tracking-tight">
+                <span className="block text-2xl sm:text-3xl font-black text-[#607897] tracking-tight">
                   {String(timeLeft.minutes).padStart(2, '0')}
                 </span>
-                <span className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">Mins</span>
+                <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Mins</span>
               </div>
               <div className="px-1">
-                <span className="block text-2xl sm:text-3xl font-extrabold text-[#1e3450] tracking-tight">
+                <span className="block text-2xl sm:text-3xl font-black text-[#f5a623] tracking-tight">
                   {String(timeLeft.seconds).padStart(2, '0')}
                 </span>
-                <span className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">Secs</span>
+                <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Secs</span>
               </div>
             </div>
           </div>
 
-          {/* Event Details */}
-          <div className="space-y-3 mb-6 text-[#1e3450]">
-            <div className="flex items-center justify-between bg-[#f0ebd8] p-3.5 rounded-2xl hover:bg-[#eae3cd] transition-colors border border-[#e6dfd1]/60">
+          {/* Event Details with Folk Botanical Accents & Initial Load Fade-In */}
+          <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.12,
+                  delayChildren: 0.1,
+                }
+              }
+            }}
+            className="space-y-3 mb-6 text-[#162b48]"
+          >
+            {/* Date Card */}
+            <motion.div 
+              variants={{
+                hidden: { opacity: 0, y: 12 },
+                visible: { 
+                  opacity: 1, 
+                  y: 0,
+                  transition: { duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }
+                }
+              }}
+              className="flex items-center justify-between bg-white/70 p-3.5 rounded-2xl hover:bg-white transition-colors border border-[#d6cfbe]"
+            >
               <div className="flex items-center">
-                <div className="p-2.5 bg-white rounded-xl shadow-xs mr-3.5 text-[#d9534f]">
+                <div className="p-2.5 bg-[#f4f0e6] rounded-xl shadow-xs mr-3.5 text-[#c02b20] border border-[#d6cfbe]">
                   <Calendar className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-[#1e3450]">25 September 2026</p>
-                  <p className="text-xs text-gray-600 font-medium">Friday Evening • Save the Date</p>
+                  <p className="text-sm font-bold text-[#162b48]">25 September 2026</p>
+                  <p className="text-xs text-[#3d5c38] font-semibold">Friday Evening • Live Show</p>
                 </div>
               </div>
               <button
                 id="add-calendar-action-btn"
                 onClick={handleAddToGoogleCalendar}
                 title="Add to Google Calendar"
-                className="px-2.5 py-1.5 text-xs font-semibold text-[#1e3450] hover:text-[#d9534f] hover:bg-white/70 rounded-xl transition-colors flex items-center gap-1 border border-[#1e3450]/10"
+                className="px-2.5 py-1.5 text-xs font-bold text-[#162b48] hover:text-[#c02b20] hover:bg-[#f4f0e6] rounded-xl transition-colors flex items-center gap-1 border border-[#162b48]/15 shadow-xs"
               >
                 <CalendarPlus size={15} />
-                <span className="hidden sm:inline">Add</span>
+                <span className="hidden sm:inline">Calendar</span>
               </button>
-            </div>
+            </motion.div>
             
-            <div className="flex items-center bg-[#f0ebd8] p-3.5 rounded-2xl border border-[#e6dfd1]/60">
-              <div className="p-2.5 bg-white rounded-xl shadow-xs mr-3.5 text-[#d9534f]">
+            {/* Time Card */}
+            <motion.div 
+              variants={{
+                hidden: { opacity: 0, y: 12 },
+                visible: { 
+                  opacity: 1, 
+                  y: 0,
+                  transition: { duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }
+                }
+              }}
+              className="flex items-center bg-white/70 p-3.5 rounded-2xl border border-[#d6cfbe]"
+            >
+              <div className="p-2.5 bg-[#f4f0e6] rounded-xl shadow-xs mr-3.5 text-[#607897] border border-[#d6cfbe]">
                 <Clock className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-sm font-bold text-[#1e3450]">19:00 - 21:00 (SAST)</p>
-                <p className="text-xs text-gray-600 font-medium">Doors open early for dinner & drinks</p>
+                <p className="text-sm font-bold text-[#162b48]">19:00 - 21:00 (SAST)</p>
+                <p className="text-xs text-[#3d5c38] font-semibold">Doors open early for dinner & drinks</p>
               </div>
-            </div>
+            </motion.div>
 
-            <a
+            {/* Venue Location Card */}
+            <motion.a
+              variants={{
+                hidden: { opacity: 0, y: 12 },
+                visible: { 
+                  opacity: 1, 
+                  y: 0,
+                  transition: { duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }
+                }
+              }}
               id="venue-directions-link"
               href={mapsLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-between bg-[#f0ebd8] p-3.5 rounded-2xl hover:bg-[#eae3cd] transition-colors border border-[#e6dfd1]/60 group"
+              className="flex items-center justify-between bg-white/70 p-3.5 rounded-2xl hover:bg-white transition-colors border border-[#d6cfbe] group"
             >
               <div className="flex items-center">
-                <div className="p-2.5 bg-white rounded-xl shadow-xs mr-3.5 text-[#d9534f]">
+                <div className="p-2.5 bg-[#f4f0e6] rounded-xl shadow-xs mr-3.5 text-[#f5a623] border border-[#d6cfbe]">
                   <MapPin className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-[#1e3450] group-hover:text-[#d9534f] transition-colors">
+                  <p className="text-sm font-bold text-[#162b48] group-hover:text-[#5EB700] transition-colors">
                     Café Barcelona
                   </p>
-                  <p className="text-xs text-gray-600 font-medium">Live Music Venue & Bistro, Pretoria</p>
+                  <p className="text-xs text-[#3d5c38] font-semibold">Garsfontein, Pretoria • Venue & Bistro</p>
                 </div>
               </div>
-              <ExternalLink size={16} className="text-gray-500 group-hover:text-[#1e3450] transition-colors" />
-            </a>
-          </div>
+              <ExternalLink size={16} className="text-gray-500 group-hover:text-[#162b48] transition-colors" />
+            </motion.a>
+          </motion.div>
 
           {/* Primary Action Buttons */}
           <div className="space-y-4 mb-6">
+            {/* Quicket Official Booking CTA Button */}
             <a 
               id="get-tickets-quicket-btn"
               href={quicketLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full bg-[#7bc143] hover:bg-[#6ba837] active:bg-[#5f9730] text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-[#7bc143]/30 flex items-center justify-center transition-all transform hover:-translate-y-0.5 active:scale-[0.98] group text-base"
+              className="w-full bg-[#5EB700] hover:bg-[#248200] active:bg-[#1f6e00] text-white font-black py-4 px-6 rounded-2xl shadow-xl shadow-[#5EB700]/30 flex items-center justify-center transition-all transform hover:-translate-y-0.5 active:scale-[0.98] group text-base uppercase tracking-tight"
             >
-              <Ticket className="mr-2.5 w-5 h-5 group-hover:rotate-12 transition-transform" />
+              <Ticket className="mr-2.5 w-5 h-5 group-hover:rotate-12 transition-transform stroke-[2.5]" />
               Get Tickets on Quicket
             </a>
 
             {/* Social Media Sharing Section */}
-            <div id="social-share-section" className="bg-white rounded-2xl p-4 border border-[#e6dfd1] shadow-xs">
+            <div id="social-share-section" className="bg-white/80 rounded-2xl p-4 border border-[#d6cfbe] shadow-xs">
               <div className="flex items-center justify-between mb-3 px-1">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-[#1e3450] uppercase tracking-wider">
-                  <Share2 size={14} className="text-[#d9534f]" />
+                <div className="flex items-center gap-1.5 text-xs font-black text-[#404040] uppercase tracking-wider">
+                  <Share2 size={14} className="text-[#5EB700]" />
                   <span>Share Event with Friends</span>
                 </div>
                 <button
                   id="preview-caption-btn"
                   onClick={() => setShowShareModal(true)}
-                  className="text-[11px] font-semibold text-[#d9534f] hover:underline flex items-center gap-0.5"
+                  className="text-[11px] font-bold text-[#FF7D00] hover:underline flex items-center gap-0.5"
                 >
                   <Sparkles size={12} />
                   <span>View Post</span>
@@ -371,11 +566,11 @@ export default function App() {
               </div>
 
               {/* Fast Copy & Universal Share Row */}
-              <div className="mt-3 pt-2.5 border-t border-[#e6dfd1] flex items-center justify-between gap-2">
+              <div className="mt-3 pt-2.5 border-t border-[#e6dfcc] flex items-center justify-between gap-2">
                 <button
                   id="copy-formatted-post-btn"
                   onClick={() => copyToClipboard(fullShareText, "Full event details & Quicket link copied!")}
-                  className="flex-1 py-2 px-3 text-xs font-semibold text-[#1e3450] bg-[#f0ebd8] hover:bg-[#eae3cd] rounded-xl flex items-center justify-center gap-1.5 transition-colors"
+                  className="flex-1 py-2 px-3 text-xs font-bold text-[#404040] bg-[#ede8dc] hover:bg-[#e4ddcd] rounded-xl flex items-center justify-center gap-1.5 transition-colors border border-[#d6cfbe]"
                 >
                   <Copy size={13} />
                   <span>Copy Post Text</span>
@@ -383,7 +578,7 @@ export default function App() {
                 <button
                   id="universal-share-link-btn"
                   onClick={handleGeneralShare}
-                  className="py-2 px-3 text-xs font-semibold text-[#1e3450] bg-[#f0ebd8] hover:bg-[#eae3cd] rounded-xl flex items-center justify-center gap-1.5 transition-colors"
+                  className="py-2 px-3 text-xs font-bold text-[#404040] bg-[#ede8dc] hover:bg-[#e4ddcd] rounded-xl flex items-center justify-center gap-1.5 transition-colors border border-[#d6cfbe]"
                 >
                   <Share2 size={13} />
                   <span>Share Link</span>
@@ -392,92 +587,86 @@ export default function App() {
             </div>
           </div>
 
-          {/* Footer note */}
-          <footer className="mt-4 text-center text-xs text-gray-500 flex items-center justify-center gap-1">
-            <span>Powered by</span>
+          {/* Official Quicket Brand Footer with Logo & Tagline */}
+          <footer className="mt-6 pt-5 border-t border-[#d6cfbe] text-center flex flex-col items-center justify-center">
+            <span className="text-[10px] text-[#59595C] uppercase tracking-widest font-bold mb-2">
+              Official Ticketing Partner
+            </span>
             <a 
               href={quicketLink} 
               target="_blank" 
-              rel="noopener noreferrer" 
-              className="font-semibold text-[#1e3450] hover:underline"
+              rel="noopener noreferrer"
+              className="inline-block transform hover:scale-105 transition-transform"
+              title="Visit Quicket - a ticketmaster company"
             >
-              Quicket
+              <QuicketLogo variant="green-grey" className="h-8" />
             </a>
-            <span>• Official Ticketing</span>
           </footer>
           
         </div>
       </main>
 
-      {/* Share Preview Modal */}
+      {/* ========================================================================= */}
+      {/* SOCIAL MEDIA PREVIEW MODAL */}
+      {/* ========================================================================= */}
       {showShareModal && (
         <div 
-          id="share-preview-modal-backdrop"
+          id="social-share-modal" 
           className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
           onClick={() => setShowShareModal(false)}
         >
           <div 
-            id="share-preview-modal"
-            className="bg-[#f8f5ef] max-w-sm w-full rounded-3xl p-5 shadow-2xl border border-[#e6dfd1] relative"
+            className="bg-[#f4f0e6] rounded-3xl p-6 max-w-sm w-full shadow-2xl border-2 border-[#d6cfbe] animate-in fade-in zoom-in duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-[#1e3450] text-base flex items-center gap-2">
-                <Sparkles size={16} className="text-[#d9534f]" />
+              <h3 className="font-black text-[#404040] text-base flex items-center gap-2 uppercase tracking-tight">
+                <Sparkles size={16} className="text-[#5EB700]" />
                 Pre-filled Social Post
               </h3>
               <button 
                 onClick={() => setShowShareModal(false)}
-                className="p-1 rounded-full text-gray-500 hover:bg-gray-200 transition-colors"
+                className="p-1 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-200 transition-colors"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <p className="text-xs text-gray-600 mb-3">
+            <p className="text-xs text-[#59595C] mb-3">
               This message is automatically pre-filled when sharing to Facebook, Twitter, and Instagram:
             </p>
 
-            <div className="bg-white p-3.5 rounded-2xl border border-[#e6dfd1] text-xs text-[#1e3450] font-mono whitespace-pre-line mb-4 shadow-inner">
+            <div className="bg-white p-3.5 rounded-2xl border border-[#d6cfbe] text-xs text-[#404040] whitespace-pre-line mb-4 shadow-inner leading-relaxed font-sans">
               {fullShareText}
             </div>
 
-            <div className="grid grid-cols-3 gap-2 mb-3">
+            <div className="grid grid-cols-3 gap-2 mb-4">
               <button
-                onClick={() => {
-                  handleShareFacebook();
-                  setShowShareModal(false);
-                }}
-                className="py-2 rounded-xl bg-[#1877F2] text-white font-bold text-xs flex items-center justify-center gap-1 hover:opacity-90 transition-opacity"
+                onClick={handleShareFacebook}
+                className="py-2 px-3 bg-[#1877F2] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1 hover:bg-[#1465cc] transition-colors"
               >
                 <Facebook size={14} className="fill-current" />
-                Facebook
+                Post
               </button>
               <button
-                onClick={() => {
-                  handleShareTwitter();
-                  setShowShareModal(false);
-                }}
-                className="py-2 rounded-xl bg-black text-white font-bold text-xs flex items-center justify-center gap-1 hover:opacity-90 transition-opacity"
+                onClick={handleShareTwitter}
+                className="py-2 px-3 bg-black text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1 hover:bg-gray-800 transition-colors"
               >
                 <Twitter size={14} className="fill-current" />
-                Twitter/X
+                Tweet
               </button>
               <button
-                onClick={() => {
-                  handleShareInstagram();
-                  setShowShareModal(false);
-                }}
-                className="py-2 rounded-xl bg-gradient-to-r from-[#f09433] via-[#dc2743] to-[#bc1888] text-white font-bold text-xs flex items-center justify-center gap-1 hover:opacity-90 transition-opacity"
+                onClick={handleShareInstagram}
+                className="py-2 px-3 bg-[#E1306C] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1 hover:bg-[#c1275d] transition-colors"
               >
                 <Instagram size={14} />
-                Instagram
+                Insta
               </button>
             </div>
 
             <button
               onClick={() => copyToClipboard(fullShareText, "Post copied to clipboard!")}
-              className="w-full py-2.5 bg-[#1e3450] hover:bg-[#15253a] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-xs"
+              className="w-full py-2.5 bg-[#162b48] hover:bg-[#0f1f34] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-xs uppercase tracking-wider"
             >
               <Copy size={14} />
               Copy Full Post Text
@@ -485,8 +674,55 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* FULL CONCERT POSTER MODAL (Exact Authentic Artwork) */}
+      {/* ========================================================================= */}
+      {showPosterModal && (
+        <div 
+          id="poster-artwork-modal" 
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+          onClick={() => setShowPosterModal(false)}
+        >
+          <div 
+            className="relative max-w-lg w-full bg-[#f4f0e6] rounded-3xl shadow-2xl border-2 border-[#d6cfbe] p-4 sm:p-6 animate-in fade-in zoom-in duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button 
+              onClick={() => setShowPosterModal(false)}
+              className="absolute top-4 right-4 z-30 p-2 rounded-full bg-[#162b48] text-white hover:bg-black transition-colors shadow-lg"
+              title="Close poster"
+            >
+              <X size={20} />
+            </button>
+
+            {/* Poster Artwork Replica Component */}
+            <PosterArtwork className="w-full" />
+
+            {/* Modal Bottom Actions */}
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <a
+                href={quicketLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 bg-[#5EB700] hover:bg-[#248200] text-white py-3 rounded-2xl font-black text-xs text-center flex items-center justify-center gap-1.5 shadow-lg uppercase tracking-tight"
+              >
+                <Ticket size={16} />
+                Book Tickets on Quicket
+              </a>
+              <button
+                onClick={() => copyToClipboard(fullShareText, "Post copied to clipboard!")}
+                className="px-4 bg-[#162b48] hover:bg-[#0f1f34] text-white py-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5"
+              >
+                <Share2 size={16} />
+                Share
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
     </div>
   );
 }
-
-

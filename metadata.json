@@ -1,6 +1,6 @@
 {
-  "name": "Café Barcelona - L.E. Band Live",
-  "description": "Event countdown and ticket booking for Café Barcelona presents L.E. BAND live in concert.",
+  "name": "Café Barcelona - L.E.BAND UNPLUGGED",
+  "description": "Event countdown and ticket booking for Café Barcelona presents L.E.BAND - UNPLUGGED (Louis Esterhuizen Band) live in concert.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
