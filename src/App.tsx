@@ -44,12 +44,12 @@ export default function App() {
   // Target: 25 September 2026 at 19:00 SAST (UTC+2)
   const targetDate = new Date('2026-09-25T19:00:00+02:00').getTime();
   const quicketLink = "https://www.quicket.co.za/events/393344-caf-barcelona-presents-leband/?utm_source=EventPage&utm_medium=Sharebox&utm_campaign=&ref=event-page-share";
-  const mapsLink = "https://www.google.com/maps/search/?api=1&query=Caf%C3%A9+Barcelona+Garsfontein+Pretoria";
+  const mapsLink = "https://www.google.com/maps/search/?api=1&query=Caf%C3%A9+Barcelona%2C+53+Thomson+St%2C+Colbyn%2C+Pretoria%2C+0153";
 
   const eventTitle = "Café Barcelona Presents L.E.BAND - UNPLUGGED (Louis Esterhuizen Band)";
   const eventDate = "25 September 2026";
   const eventTime = "19:00 - 21:00 (SAST)";
-  const eventVenue = "Café Barcelona, Pretoria";
+  const eventVenue = "Café Barcelona, 53 Thomson St, Colbyn, Pretoria, 0153";
   const ticketPrice = "R150";
 
   const fullShareText = `🎸 ${eventTitle}\n📅 Date: ${eventDate}\n⏰ Time: ${eventTime}\n📍 Venue: ${eventVenue}\n🎟️ Tickets: ${ticketPrice}\n🔗 Get Tickets on Quicket: ${quicketLink}`;
@@ -164,7 +164,7 @@ export default function App() {
   };
 
   const handleShareTwitter = () => {
-    const tweetText = `🎸 ${eventTitle}\n📅 25 Sept 2026, 19:00\n📍 Café Barcelona, Pretoria\n\nBook your tickets now on @QuicketSA:`;
+    const tweetText = `🎸 ${eventTitle}\n📅 25 Sept 2026, 19:00\n📍 Café Barcelona, 53 Thomson St, Colbyn, Pretoria\n🎟️ Tickets: ${ticketPrice}\n\nBook your tickets now on @QuicketSA:`;
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(quicketLink)}`;
     window.open(twitterUrl, '_blank', 'width=600,height=500');
   };
@@ -194,8 +194,8 @@ export default function App() {
 
   const handleAddToGoogleCalendar = () => {
     const title = encodeURIComponent(eventTitle);
-    const details = encodeURIComponent(`Café Barcelona presents L.E.BAND - UNPLUGGED (Louis Esterhuizen Band) live in concert.\n\nDate: ${eventDate}\nTime: ${eventTime}\nVenue: ${eventVenue}\n\nBook tickets on Quicket: ${quicketLink}`);
-    const location = encodeURIComponent("Café Barcelona, Pretoria, South Africa");
+    const details = encodeURIComponent(`Café Barcelona presents L.E.BAND - UNPLUGGED (Louis Esterhuizen Band) live in concert.\n\nDate: ${eventDate}\nTime: ${eventTime}\nVenue: ${eventVenue}\nTickets: ${ticketPrice}\n\nBook tickets on Quicket: ${quicketLink}`);
+    const location = encodeURIComponent("Café Barcelona, 53 Thomson St, Colbyn, Pretoria, 0153, South Africa");
     // 25 Sep 2026 19:00 SAST (17:00 UTC) to 21:00 SAST (19:00 UTC)
     const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=20260925T170000Z/20260925T190000Z&details=${details}&location=${location}`;
     window.open(gCalUrl, '_blank');
@@ -499,7 +499,7 @@ export default function App() {
                   <p className="text-sm font-bold text-[#162b48] group-hover:text-[#5EB700] transition-colors">
                     Café Barcelona
                   </p>
-                  <p className="text-xs text-[#3d5c38] font-semibold">Garsfontein, Pretoria • Venue & Bistro</p>
+                  <p className="text-xs text-[#3d5c38] font-semibold">53 Thomson St, Colbyn, Pretoria, 0153</p>
                 </div>
               </div>
               <ExternalLink size={16} className="text-gray-500 group-hover:text-[#162b48] transition-colors" />
