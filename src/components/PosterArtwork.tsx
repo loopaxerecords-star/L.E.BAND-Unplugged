@@ -58,13 +58,16 @@ export const PosterArtwork: React.FC<PosterArtworkProps> = ({ className = "" }) 
             <span className="h-[1.5px] w-12 sm:w-16 bg-[#5a7088]/40"></span>
           </div>
 
-          {/* Date & Time Block */}
+          {/* Date, Time & Ticket Price Block */}
           <div className="space-y-0.5 mt-2">
             <div className="font-['Playfair_Display'] text-xl sm:text-2xl font-extrabold text-[#162b48] tracking-normal">
               25 September
             </div>
             <div className="font-['Playfair_Display'] text-lg sm:text-xl font-bold text-[#162b48] tracking-normal">
               19:00-21:00
+            </div>
+            <div className="font-['Playfair_Display'] text-base sm:text-lg font-black text-[#248200] tracking-wide pt-1">
+              Tickets: R150
             </div>
           </div>
         </div>

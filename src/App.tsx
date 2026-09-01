@@ -50,8 +50,9 @@ export default function App() {
   const eventDate = "25 September 2026";
   const eventTime = "19:00 - 21:00 (SAST)";
   const eventVenue = "Café Barcelona, Pretoria";
+  const ticketPrice = "R150";
 
-  const fullShareText = `🎸 ${eventTitle}\n📅 Date: ${eventDate}\n⏰ Time: ${eventTime}\n📍 Venue: ${eventVenue}\n🎟️ Get Tickets on Quicket: ${quicketLink}`;
+  const fullShareText = `🎸 ${eventTitle}\n📅 Date: ${eventDate}\n⏰ Time: ${eventTime}\n📍 Venue: ${eventVenue}\n🎟️ Tickets: ${ticketPrice}\n🔗 Get Tickets on Quicket: ${quicketLink}`;
 
   const calculateTimeLeft = useCallback((): TimeLeft => {
     const difference = targetDate - Date.now();
@@ -268,21 +269,15 @@ export default function App() {
 
           {/* Central 4-Piece Band Unplugged Stage Illustration Backdrop */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
-            <BandStageIllustration className="w-full h-full object-cover scale-110 translate-y-1" opacity={0.45} showSpotlights={true} />
+            <BandStageIllustration className="w-full h-full object-cover scale-105" opacity={0.68} showSpotlights={true} />
           </div>
 
-          {/* Botanical Floral Frame Corner Accents (Matching Poster Motif) */}
-          <div className="absolute -top-3 -left-3 pointer-events-none select-none z-10">
-            <BlueAnemone size={72} className="transform -rotate-12" />
+          {/* Botanical Floral Frame Corner Accents */}
+          <div className="absolute -top-3 -left-3 pointer-events-none select-none z-10 opacity-70">
+            <BlueAnemone size={58} className="transform -rotate-12" />
           </div>
-          <div className="absolute top-11 -left-2 pointer-events-none select-none z-10">
-            <MarigoldBlossom size={42} />
-          </div>
-          <div className="absolute -top-3 -right-3 pointer-events-none select-none z-10">
-            <FolkRose size={85} className="transform rotate-12" />
-          </div>
-          <div className="absolute top-12 right-0 pointer-events-none select-none z-10">
-            <OrangePoppy size={46} />
+          <div className="absolute -top-3 -right-3 pointer-events-none select-none z-10 opacity-70">
+            <FolkRose size={68} className="transform rotate-12" />
           </div>
 
           {/* Quick Floating Actions over Botanical Header */}
@@ -310,38 +305,34 @@ export default function App() {
             </button>
           </div>
 
-          {/* Authentic Concert Poster Typography */}
-          <div className="relative z-10 mt-1">
-            <div className="font-['Playfair_Display'] text-xl sm:text-2xl font-extrabold text-[#162b48] tracking-tight leading-tight">
-              Café Barcelona
-            </div>
-            <div className="font-['Playfair_Display'] text-xl sm:text-2xl font-extrabold text-[#162b48] tracking-tight leading-none mt-0.5 mb-3">
-              Presents
+          {/* Authentic Concert Poster Typography Framed over Background Sketch */}
+          <div className="relative z-10 mt-1 bg-[#f4f0e6]/85 backdrop-blur-[2px] px-4 py-3.5 rounded-2xl border border-[#d6cfbe]/80 shadow-xs inline-block max-w-[92%] mx-auto">
+            <div className="font-['Playfair_Display'] text-lg sm:text-xl font-extrabold text-[#162b48] tracking-tight leading-tight">
+              Café Barcelona Presents
             </div>
 
-            <h1 className="font-['Playfair_Display'] text-3xl sm:text-4xl font-black text-[#162b48] tracking-tight leading-none uppercase drop-shadow-xs">
+            <h1 className="font-['Playfair_Display'] text-2xl sm:text-3xl font-black text-[#162b48] tracking-tight leading-none uppercase my-1 drop-shadow-xs">
               L.E.BAND - UNPLUGGED
             </h1>
 
-            <p className="font-['Playfair_Display'] italic text-sm sm:text-base font-bold text-[#2d4768] mt-1 mb-2 tracking-wide">
+            <p className="font-['Playfair_Display'] italic text-xs sm:text-sm font-bold text-[#2d4768] mb-1.5 tracking-wide">
               Louis Esterhuizen Band
             </p>
 
             {/* Delicate Vintage Engraved Divider */}
-            <div className="flex items-center justify-center gap-2.5 my-2.5">
-              <span className="h-[1.5px] w-10 sm:w-14 bg-[#5a7088]/50"></span>
-              <div className="w-2 h-2 rotate-45 border border-[#5a7088]/80 bg-[#f4f0e6]"></div>
-              <span className="h-[1.5px] w-10 sm:w-14 bg-[#5a7088]/50"></span>
+            <div className="flex items-center justify-center gap-2 my-1.5">
+              <span className="h-[1.5px] w-8 sm:w-12 bg-[#5a7088]/50"></span>
+              <div className="w-1.5 h-1.5 rotate-45 border border-[#5a7088]/80 bg-[#f4f0e6]"></div>
+              <span className="h-[1.5px] w-8 sm:w-12 bg-[#5a7088]/50"></span>
             </div>
 
-            {/* Poster Date & Time Representation */}
-            <div className="space-y-0.5">
-              <div className="font-['Playfair_Display'] text-lg sm:text-xl font-extrabold text-[#162b48] tracking-normal">
-                25 September
-              </div>
-              <div className="font-['Playfair_Display'] text-base sm:text-lg font-bold text-[#162b48] tracking-normal">
-                19:00-21:00
-              </div>
+            {/* Poster Date & Time & Price Representation */}
+            <div className="flex items-center justify-center flex-wrap gap-2 sm:gap-3 text-xs sm:text-sm font-extrabold text-[#162b48] font-['Playfair_Display']">
+              <span>25 September 2026</span>
+              <span>•</span>
+              <span>19:00 - 21:00</span>
+              <span>•</span>
+              <span className="text-[#248200] font-black">Tickets: R150</span>
             </div>
           </div>
         </header>
@@ -405,6 +396,32 @@ export default function App() {
             }}
             className="space-y-3 mb-6 text-[#162b48]"
           >
+            {/* Ticket Price Card */}
+            <motion.div 
+              variants={{
+                hidden: { opacity: 0, y: 12 },
+                visible: { 
+                  opacity: 1, 
+                  y: 0,
+                  transition: { duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }
+                }
+              }}
+              className="flex items-center justify-between bg-white/70 p-3.5 rounded-2xl hover:bg-white transition-colors border border-[#d6cfbe]"
+            >
+              <div className="flex items-center">
+                <div className="p-2.5 bg-[#f4f0e6] rounded-xl shadow-xs mr-3.5 text-[#5EB700] border border-[#d6cfbe]">
+                  <Ticket className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-[#162b48]">Ticket Price: R150</p>
+                  <p className="text-xs text-[#3d5c38] font-semibold">General Admission • Book on Quicket</p>
+                </div>
+              </div>
+              <span className="text-xs font-black px-2.5 py-1 bg-[#5EB700]/15 text-[#248200] border border-[#5EB700]/30 rounded-xl">
+                R150
+              </span>
+            </motion.div>
+
             {/* Date Card */}
             <motion.div 
               variants={{
@@ -500,7 +517,7 @@ export default function App() {
               className="w-full bg-[#5EB700] hover:bg-[#248200] active:bg-[#1f6e00] text-white font-black py-4 px-6 rounded-2xl shadow-xl shadow-[#5EB700]/30 flex items-center justify-center transition-all transform hover:-translate-y-0.5 active:scale-[0.98] group text-base uppercase tracking-tight"
             >
               <Ticket className="mr-2.5 w-5 h-5 group-hover:rotate-12 transition-transform stroke-[2.5]" />
-              Get Tickets on Quicket
+              <span>Get Tickets on Quicket • R150</span>
             </a>
 
             {/* Social Media Sharing Section */}
